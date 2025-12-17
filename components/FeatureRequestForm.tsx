@@ -17,6 +17,7 @@ interface FeatureRequestFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  onDelete?: () => void;
 }
 
 // Validation constraints
@@ -56,6 +57,7 @@ export function FeatureRequestForm({
   isOpen,
   onClose,
   onSuccess,
+  onDelete,
 }: FeatureRequestFormProps) {
   const isEditMode = !!request;
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -151,8 +153,8 @@ export function FeatureRequestForm({
         throw new Error(data.error || "Failed to delete request");
       }
 
-      onSuccess();
       onClose();
+      onDelete?.();
     } catch (err) {
       setApiError(err instanceof Error ? err.message : "An error occurred");
     } finally {

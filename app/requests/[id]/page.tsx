@@ -67,6 +67,10 @@ export default function FeatureRequestDetailPage({ params }: DetailPageProps) {
     }
   };
 
+  const handleFormDelete = () => {
+    router.push("/");
+  };
+
   const handleAddComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim() || !id) return;
@@ -219,6 +223,7 @@ export default function FeatureRequestDetailPage({ params }: DetailPageProps) {
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
         onSuccess={handleFormSuccess}
+        onDelete={handleFormDelete}
       />
     </main>
   );
