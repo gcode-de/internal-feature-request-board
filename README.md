@@ -11,12 +11,14 @@ Domain-driven scaffold for an internal Feature Request Board. Built with Next.js
 
 - As a POC this works without auth
 - We only need English
+- I can use a single dev branch instead of creating one per feature as you would in a work context
 
 ## Conscious decisions
 
 - Ignore responsiveness for now but make shure to add later
 - Mock database to save time
 - Ignore auth as it was not part of the app description
+- Make request description non required so you cann add quick thoughts and refine them later
 
 ## Core Domain Concepts
 
@@ -80,3 +82,8 @@ Visit http://localhost:3000
 - Voting & de-duplication mechanics
 - Curation workflows and audit trail
 - Advanced discovery (search, filters, ownership)
+- Improve UX: Add menu to request list to vote, edit or change properties?
+
+## Improvements
+
+-
