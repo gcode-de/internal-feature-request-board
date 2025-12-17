@@ -86,4 +86,5 @@ Visit http://localhost:3000
 
 ## Improvements
 
--
+- Form should clear after submit
+- Discuss loading state handling - should the request list always render or should this be handled at a higher level?
