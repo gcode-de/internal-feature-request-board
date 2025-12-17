@@ -10,10 +10,7 @@ export async function GET() {
     const requests = await FeatureRequestRepository.findAll();
     return NextResponse.json(requests);
   } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to retrieve feature requests" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to retrieve feature requests" }, { status: 500 });
   }
 }
 
@@ -29,7 +26,7 @@ export async function POST(request: NextRequest) {
     if (!body.title || !body.description || !body.status || !body.priority) {
       return NextResponse.json(
         { error: "Missing required fields: title, description, status, priority" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -42,9 +39,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(newRequest, { status: 201 });
   } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to create feature request" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to create feature request" }, { status: 500 });
   }
 }

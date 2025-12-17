@@ -5,10 +5,7 @@ import { FeatureRequestRepository } from "@/lib/repositories/feature-request.rep
  * GET /api/feature-requests/[id]
  * Retrieve a single feature request (Discovery Context)
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const featureRequest = await FeatureRequestRepository.findById(id);
@@ -19,10 +16,7 @@ export async function GET(
 
     return NextResponse.json(featureRequest);
   } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to retrieve feature request" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to retrieve feature request" }, { status: 500 });
   }
 }
 
@@ -30,10 +24,7 @@ export async function GET(
  * PUT /api/feature-requests/[id]
  * Update a feature request (Curation Context)
  */
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const body = await request.json();
@@ -46,10 +37,7 @@ export async function PUT(
 
     return NextResponse.json(updated);
   } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to update feature request" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to update feature request" }, { status: 500 });
   }
 }
 
@@ -59,7 +47,7 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
@@ -71,9 +59,6 @@ export async function DELETE(
 
     return NextResponse.json({ message: "Feature request deleted successfully" });
   } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to delete feature request" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to delete feature request" }, { status: 500 });
   }
 }

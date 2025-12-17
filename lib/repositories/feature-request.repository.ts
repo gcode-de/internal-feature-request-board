@@ -7,7 +7,8 @@ let featureRequests: Map<string, FeatureRequest> = new Map([
     {
       id: "req-001",
       title: "Advanced search with filters",
-      description: "Enable users to filter requests by status, priority, and tags for better discovery.",
+      description:
+        "Enable users to filter requests by status, priority, and tags for better discovery.",
       status: Status.Planned,
       priority: Priority.P1,
     },
@@ -27,7 +28,8 @@ let featureRequests: Map<string, FeatureRequest> = new Map([
     {
       id: "req-003",
       title: "Duplicate detection on submission",
-      description: "Suggest similar existing requests when users submit new ideas to reduce duplicates.",
+      description:
+        "Suggest similar existing requests when users submit new ideas to reduce duplicates.",
       status: Status.Proposed,
       priority: Priority.P2,
     },
@@ -86,7 +88,10 @@ export class FeatureRequestRepository {
   /**
    * Update an existing feature request (Curation Context)
    */
-  static async update(id: string, updates: Partial<FeatureRequest>): Promise<FeatureRequest | null> {
+  static async update(
+    id: string,
+    updates: Partial<FeatureRequest>,
+  ): Promise<FeatureRequest | null> {
     const existing = featureRequests.get(id);
     if (!existing) return null;
 
