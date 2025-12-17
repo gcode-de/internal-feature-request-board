@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { FeatureRequestRepository } from "@/lib/repositories/feature-request.repository";
+import { Status, Priority } from "@/types/feature-request";
 
 /**
  * GET /api/feature-requests/[id]
@@ -28,8 +29,35 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   try {
     const { id } = await params;
     const body = await request.json();
+    const existing = await FeatureRequestRepository.findById(id);
+    if (!existing) {
+      return NextResponse.json({ error: "Feature request not found" }, { status: 404 });
+    }
 
-    const updated = await FeatureRequestRepository.update(id, body);
+    const { title, description, status, priority, comment } = body;
+
+    const updates: Partial<typeof existing> = {};
+
+    if (typeof title === "string") updates.title = title;
+    if (typeof description === "string") updates.description = description;
+    if (typeof status === "string" && Object.values(Status).includes(status as Status)) {
+      updates.status = status as Status;
+    }
+    if (typeof priority === "string" && Object.values(Priority).includes(priority as Priority)) {
+      updates.priority = priority as Priority;
+    }
+
+    if (typeof comment === "string" && comment.trim()) {
+      const newComment = {
+        id: `comment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        featureRequestId: id,
+        content: comment,
+        createdAt: new Date(),
+      };
+      updates.comments = [...existing.comments, newComment];
+    }
+
+    const updated = await FeatureRequestRepository.update(id, updates);
 
     if (!updated) {
       return NextResponse.json({ error: "Feature request not found" }, { status: 404 });

@@ -11,6 +11,7 @@ let featureRequests: Map<string, FeatureRequest> = new Map([
         "Enable users to filter requests by status, priority, and tags for better discovery.",
       status: Status.Planned,
       priority: Priority.P1,
+      comments: [],
     },
   ],
   [
@@ -21,6 +22,7 @@ let featureRequests: Map<string, FeatureRequest> = new Map([
       description: "Notify submitters when their request status changes to keep them informed.",
       status: Status.UnderReview,
       priority: Priority.P2,
+      comments: [],
     },
   ],
   [
@@ -32,6 +34,7 @@ let featureRequests: Map<string, FeatureRequest> = new Map([
         "Suggest similar existing requests when users submit new ideas to reduce duplicates.",
       status: Status.Proposed,
       priority: Priority.P2,
+      comments: [],
     },
   ],
   [
@@ -42,6 +45,7 @@ let featureRequests: Map<string, FeatureRequest> = new Map([
       description: "Display planned and in-progress features on a public-facing roadmap page.",
       status: Status.InProgress,
       priority: Priority.P0,
+      comments: [],
     },
   ],
   [
@@ -52,6 +56,7 @@ let featureRequests: Map<string, FeatureRequest> = new Map([
       description: "Allow users to switch between light and dark themes for better accessibility.",
       status: Status.Shipped,
       priority: Priority.P3,
+      comments: [],
     },
   ],
 ]);
@@ -75,11 +80,12 @@ export class FeatureRequestRepository {
   /**
    * Submit a new feature request
    */
-  static async create(request: Omit<FeatureRequest, "id">): Promise<FeatureRequest> {
+  static async create(request: Omit<FeatureRequest, "id" | "comments">): Promise<FeatureRequest> {
     const id = `req-${Date.now()}`;
     const newRequest: FeatureRequest = {
       ...request,
       id,
+      comments: [],
     };
     featureRequests.set(id, newRequest);
     return newRequest;

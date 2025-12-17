@@ -1,5 +1,7 @@
 // Domain types for Feature Request Board
 
+import { Comment } from "./comment";
+
 export enum Status {
   Proposed = "proposed",
   UnderReview = "under_review",
@@ -22,6 +24,7 @@ export interface FeatureRequest {
   description: string;
   status: Status;
   priority: Priority;
+  comments: Comment[];
 }
 
 export const statusLabels: Record<Status, string> = {
