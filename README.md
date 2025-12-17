@@ -1,92 +1,52 @@
-# internal-feature-request-board
+# Internal Feature Request Board
 
-Domain-driven scaffold for an internal Feature Request Board. Built with Next.js (App Router, TypeScript), Tailwind CSS, and shadcn/ui-styled components.
+A lightweight, domain-driven tool for teams to submit, discuss, and prioritize feature ideas. Built with Next.js (App Router), TypeScript, Tailwind CSS, and shadcn/ui.
 
-## Vision
-
-- Empower internal teams to collect, discuss, and prioritize feature ideas transparently.
-- Provide a lightweight, opinionated workflow from idea submission to prioritized backlog.
-
-## Assumptions
-
-- As a POC this works without auth
-- We only need English
-- I can use a single dev branch instead of creating one per feature as you would in a work context
-
-## Conscious decisions
-
-- Ignore responsiveness for now but make shure to add later
-- Mock database to save time
-- Ignore auth as it was not part of the app description
-- Make request description non required so you cann add quick thoughts and refine them later
-
-## Core Domain Concepts
-
-- FeatureRequest: a proposed idea with title, description, and context.
-- Comment: discussion item attached to a FeatureRequest.
-- Vote: signal of support/priority from stakeholders.
-- Status: lifecycle stage (e.g., Proposed, Under Review, Planned, In Progress, Shipped, Rejected).
-- Priority: product-driven ordering (e.g., P0–P3) not tied to votes alone.
-
-## Key Use Cases
-
-- Submit an idea with problem statement and impact.
-- Discover and upvote existing ideas to avoid duplicates.
-- Curate: merge duplicates, set status/priority, tag ownership and area.
-- Discuss: structured comments with decision history.
-- Roadmap signaling: communicate planned vs. non-planned clearly.
-
-## Bounded Contexts (initial)
-
-- Submission: capture, validate, and de-duplicate new requests.
-- Curation: moderation, status transitions, and prioritization.
-- Discovery: search, filters, tags, and vote signals.
-- Communication: comments, decisions, and change logs.
-
-## Non-Functional Requirements
-
-- Clarity: simple flows and transparent states.
-- Traceability: visible decisions and rationales.
-- Maintainability: modular UI, typed code, minimal coupling.
-
-## Tech Stack
-
-- Next.js App Router (TypeScript)
-- Tailwind CSS
-- shadcn/ui-styled components (utility-first, accessible)
-
-## Quickstart
+## Getting Started
 
 ```bash
-# Install dependencies
 npm install
-
-# Start development server
-npm run dev
-
-# Lint, format, typecheck
-npm run lint
-npm run format
-npm run typecheck
-
-# Build for production
-npm run build
-npm start
+npm run dev        # Start dev server (http://localhost:3000)
+npm run lint       # TypeScript + ESLint
+npm run build      # Production build
 ```
 
-Visit http://localhost:3000
+## Architecture
 
-## Roadmap / Unimplemented features
+**Core Concepts**
 
-- Request model & persistence (IDs, status, priority, tags)
-- Voting & de-duplication mechanics
-- Curation workflows and audit trail
-- Advanced discovery (search, filters, ownership)
-- Improve UX: Add menu to request list to vote, edit or change properties?
+- FeatureRequest: title, description, status, priority, comments
+- Status: Proposed → Under Review → Planned → In Progress → Shipped / Rejected
+- Priority: P0–P3
+- Comment: discussion thread attached to requests
 
-## Improvements
+**Bounded Contexts**
 
-- Form should clear after submit (done)
-- Discuss loading state handling - should the request list always render or should this be handled at a higher level?
-- Form validation is being shown as API-Error
-- Separate API route for comments?
+- Submission: create and validate requests (description optional)
+- Curation: edit status/priority via modal form
+- Discovery: list view with comment counter
+- Discussion: add comments to requests
+
+## Key Decisions
+
+✅ **In-Memory Database** - No Prisma/DB setup; data resets on /restart  
+✅ **No Authentication** - Single internal team, no user tracking  
+✅ **Description Optional** - Encourage quick submissions, refine later  
+✅ **Comments as Request Property** - No separate table; simple data model  
+✅ **Form Validation** - Real-time feedback with touched-state tracking
+
+## Not Implemented (Yet)
+
+- Voting / de-duplication
+- Search, sort & filters
+- Audit trail / decision history
+- User authentication & roles
+- Responsive mobile design
+- Database persistence
+
+## Roadmap
+
+- [ ] Add database (Prisma + PostgreSQL)
+- [ ] Voting system
+- [ ] Advanced search/filters
+- [ ] User roles & audit trail
