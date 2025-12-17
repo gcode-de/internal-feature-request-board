@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,6 +19,38 @@ interface FeatureRequestFormProps {
   onSuccess: () => void;
 }
 
+// Validation constraints
+const TITLE_MIN = 3;
+const TITLE_MAX = 100;
+const DESCRIPTION_MIN = 10;
+const DESCRIPTION_MAX = 1000;
+
+// Field validation errors
+interface ValidationErrors {
+  title?: string;
+  description?: string;
+}
+
+function validateForm(title: string, description: string): ValidationErrors {
+  const errors: ValidationErrors = {};
+
+  if (!title.trim()) {
+    errors.title = "Title is required";
+  } else if (title.trim().length < TITLE_MIN) {
+    errors.title = `Title must be at least ${TITLE_MIN} characters`;
+  } else if (title.length > TITLE_MAX) {
+    errors.title = `Title must not exceed ${TITLE_MAX} characters`;
+  }
+
+  if (description.trim() && description.trim().length < DESCRIPTION_MIN) {
+    errors.description = `Description must be at least ${DESCRIPTION_MIN} characters`;
+  } else if (description.length > DESCRIPTION_MAX) {
+    errors.description = `Description must not exceed ${DESCRIPTION_MAX} characters`;
+  }
+
+  return errors;
+}
+
 export function FeatureRequestForm({
   request,
   isOpen,
@@ -27,21 +59,46 @@ export function FeatureRequestForm({
 }: FeatureRequestFormProps) {
   const isEditMode = !!request;
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   // Form state
   const [title, setTitle] = useState(request?.title || "");
   const [description, setDescription] = useState(request?.description || "");
   const [status, setStatus] = useState<Status>(request?.status || Status.Proposed);
   const [priority, setPriority] = useState<Priority>(request?.priority || Priority.P2);
+  const [touched, setTouched] = useState({ title: false, description: false });
+
+  // Validation
+  const validationErrors = useMemo(() => validateForm(title, description), [title, description]);
+
+  const isFormValid = Object.keys(validationErrors).length === 0;
+
+  // Reset form when opening in submit mode
+  useEffect(() => {
+    if (isOpen && !isEditMode) {
+      setTitle("");
+      setDescription("");
+      setStatus(Status.Proposed);
+      setPriority(Priority.P2);
+      setApiError(null);
+      setTouched({ title: false, description: false });
+    }
+  }, [isOpen, isEditMode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate before submit
+    if (!isFormValid) {
+      setApiError("Please fix the errors below");
+      return;
+    }
+
     setIsSubmitting(true);
-    setError(null);
+    setApiError(null);
 
     try {
-      const payload = { title, description, status, priority };
+      const payload = { title: title.trim(), description: description.trim(), status, priority };
 
       if (isEditMode && request) {
         // Update existing request (Curation Context)
@@ -51,7 +108,10 @@ export function FeatureRequestForm({
           body: JSON.stringify(payload),
         });
 
-        if (!response.ok) throw new Error("Failed to update request");
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || "Failed to update request");
+        }
       } else {
         // Submit new request (Submission Context)
         const response = await fetch("/api/feature-requests", {
@@ -60,13 +120,16 @@ export function FeatureRequestForm({
           body: JSON.stringify(payload),
         });
 
-        if (!response.ok) throw new Error("Failed to submit request");
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || "Failed to submit request");
+        }
       }
 
       onSuccess();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setApiError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsSubmitting(false);
     }
@@ -76,19 +139,22 @@ export function FeatureRequestForm({
     if (!request || !confirm("Are you sure you want to delete this request?")) return;
 
     setIsSubmitting(true);
-    setError(null);
+    setApiError(null);
 
     try {
       const response = await fetch(`/api/feature-requests/${request.id}`, {
         method: "DELETE",
       });
 
-      if (!response.ok) throw new Error("Failed to delete request");
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to delete request");
+      }
 
       onSuccess();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setApiError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsSubmitting(false);
     }
@@ -111,30 +177,50 @@ export function FeatureRequestForm({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="title" className="block text-sm font-medium mb-1">
-              Title
+              Title{" "}
+              <span className="text-xs text-muted-foreground">
+                ({title.length}/{TITLE_MAX})
+              </span>
             </label>
             <input
               id="title"
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              required
+              onBlur={() => setTouched((prev) => ({ ...prev, title: true }))}
+              maxLength={TITLE_MAX}
               className="w-full px-3 py-2 border rounded-md bg-background"
+              placeholder={"Enter title"}
             />
+            {touched.title && validationErrors.title && (
+              <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                {validationErrors.title}
+              </p>
+            )}
           </div>
 
           <div>
             <label htmlFor="description" className="block text-sm font-medium mb-1">
-              Description
+              Description{" "}
+              <span className="text-xs text-muted-foreground">
+                ({description.length}/{DESCRIPTION_MAX})
+              </span>
             </label>
             <textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              //   required
+              onBlur={() => setTouched((prev) => ({ ...prev, description: true }))}
+              maxLength={DESCRIPTION_MAX}
               rows={4}
               className="w-full px-3 py-2 border rounded-md bg-background"
+              placeholder={"Describe the request"}
             />
+            {touched.description && validationErrors.description && (
+              <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                {validationErrors.description}
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -175,9 +261,9 @@ export function FeatureRequestForm({
             </div>
           </div>
 
-          {error && (
+          {apiError && (
             <div className="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-md p-3">
-              <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
+              <p className="text-sm text-red-800 dark:text-red-200">{apiError}</p>
             </div>
           )}
 
@@ -199,7 +285,7 @@ export function FeatureRequestForm({
                 <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isSubmitting}>
+                <Button type="submit" disabled={isSubmitting || !isFormValid}>
                   {isSubmitting ? "Saving..." : isEditMode ? "Update Request" : "Submit Request"}
                 </Button>
               </div>
