@@ -23,16 +23,16 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     // Basic validation
-    if (!body.title || !body.description || !body.status || !body.priority) {
+    if (!body.title || !body.status || !body.priority) {
       return NextResponse.json(
-        { error: "Missing required fields: title, description, status, priority" },
+        { error: "Missing required fields: title, status, priority" },
         { status: 400 },
       );
     }
 
     const newRequest = await FeatureRequestRepository.create({
       title: body.title,
-      description: body.description,
+      description: body.description || "",
       status: body.status,
       priority: body.priority,
     });
