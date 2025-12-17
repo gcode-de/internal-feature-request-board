@@ -34,14 +34,12 @@ export default function HomePage() {
     fetchRequests();
   }, []);
 
-  const handleOpenForm = (request?: FeatureRequest) => {
-    setSelectedRequest(request || null);
+  const handleOpenForm = () => {
     setIsFormOpen(true);
   };
 
   const handleCloseForm = () => {
     setIsFormOpen(false);
-    setSelectedRequest(null);
   };
 
   const handleFormSuccess = () => {
@@ -60,12 +58,7 @@ export default function HomePage() {
         </Button>
       </div>
 
-      <FeatureRequestList
-        requests={requests}
-        isLoading={isLoading}
-        error={error}
-        onRequestClick={handleOpenForm}
-      />
+      <FeatureRequestList requests={requests} isLoading={isLoading} error={error} />
 
       <FeatureRequestForm
         request={selectedRequest}
