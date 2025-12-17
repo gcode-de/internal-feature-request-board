@@ -18,6 +18,8 @@ export default function FeatureRequestDetailPage({ params }: DetailPageProps) {
   const [error, setError] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [id, setId] = useState<string | null>(null);
+  const [newComment, setNewComment] = useState("");
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
 
   useEffect(() => {
     const loadParams = async () => {
@@ -62,6 +64,30 @@ export default function FeatureRequestDetailPage({ params }: DetailPageProps) {
       fetch(`/api/feature-requests/${id}`)
         .then((res) => res.json())
         .then((data) => setRequest(data));
+    }
+  };
+
+  const handleAddComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newComment.trim() || !id) return;
+
+    setIsSubmittingComment(true);
+    try {
+      const response = await fetch(`/api/feature-requests/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ comment: newComment }),
+      });
+
+      if (response.ok) {
+        const data: FeatureRequest = await response.json();
+        setRequest(data);
+        setNewComment("");
+      }
+    } catch (err) {
+      console.error("Failed to add comment:", err);
+    } finally {
+      setIsSubmittingComment(false);
     }
   };
 
@@ -144,6 +170,48 @@ export default function FeatureRequestDetailPage({ params }: DetailPageProps) {
             edit
           </Button>
         </div>
+      </div>
+
+      {/* Comments Section */}
+      <div className="bg-card border rounded-lg p-6">
+        <h2 className="text-xl font-semibold mb-4">Discussion ({request.comments.length})</h2>
+
+        {/* Comments List */}
+        <div className="space-y-3 mb-6 max-h-96 overflow-y-auto">
+          {request.comments.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-6">
+              No comments yet. Be the first to comment!
+            </p>
+          ) : (
+            request.comments.map((comment) => (
+              <div key={comment.id} className="border rounded-md p-3 bg-background">
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <p className="text-sm flex-1">{comment.content}</p>
+                  <span className="text-xs text-muted-foreground flex-shrink-0">
+                    {new Date(comment.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Add Comment Form */}
+        <form onSubmit={handleAddComment} className="border-t pt-4 space-y-3">
+          <textarea
+            placeholder="Add a comment..."
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            rows={3}
+            className="w-full px-3 py-2 border rounded-md bg-background text-sm"
+            required
+          />
+          <div className="flex justify-end">
+            <Button type="submit" size="sm" disabled={isSubmittingComment}>
+              {isSubmittingComment ? "Adding..." : "Add Comment"}
+            </Button>
+          </div>
+        </form>
       </div>
 
       <FeatureRequestForm

@@ -89,3 +89,4 @@ Visit http://localhost:3000
 - Form should clear after submit (done)
 - Discuss loading state handling - should the request list always render or should this be handled at a higher level?
 - Form validation is being shown as API-Error
+- Separate API route for comments?
