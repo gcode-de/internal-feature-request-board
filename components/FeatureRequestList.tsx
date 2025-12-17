@@ -13,9 +13,15 @@ interface FeatureRequestListProps {
   requests: FeatureRequest[];
   isLoading: boolean;
   error: string | null;
+  onRequestClick?: (request: FeatureRequest) => void;
 }
 
-export function FeatureRequestList({ requests, isLoading, error }: FeatureRequestListProps) {
+export function FeatureRequestList({
+  requests,
+  isLoading,
+  error,
+  onRequestClick,
+}: FeatureRequestListProps) {
   if (isLoading) {
     return (
       <div className="text-center py-12">
@@ -43,7 +49,11 @@ export function FeatureRequestList({ requests, isLoading, error }: FeatureReques
   return (
     <div className="space-y-3">
       {requests.map((request) => (
-        <Card key={request.id} className="hover:shadow-md transition-shadow">
+        <Card
+          key={request.id}
+          className="hover:shadow-md transition-shadow cursor-pointer"
+          onClick={() => onRequestClick?.(request)}
+        >
           <CardHeader className="pb-2 pt-4">
             <div className="flex items-start justify-between gap-4">
               <CardTitle className="text-lg font-semibold">{request.title}</CardTitle>
