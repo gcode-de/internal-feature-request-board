@@ -8,7 +8,7 @@ on:
 
 env:
   REGISTRY: docker.io
-  IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/internal-feature-request-board
+  IMAGE_NAME: ${{ github.repository_owner }}/internal-feature-request-board
 
 jobs:
   build-and-push:
