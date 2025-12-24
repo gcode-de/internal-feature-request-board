@@ -7,8 +7,8 @@ WORKDIR /app
 # Copy package files
 COPY package.json package-lock.json* ./
 
-# Install dependencies
-RUN npm ci
+# Install dependencies (keep dev deps for build but skip audit/fund messages)
+RUN npm ci --no-audit --no-fund
 
 # Stage 2: Builder
 FROM node:20-alpine AS builder
@@ -20,6 +20,10 @@ COPY . .
 
 # Build Next.js application
 RUN npm run build
+
+# Clean build caches and remove source maps to reduce image size
+RUN rm -rf .next/cache || true
+RUN find .next -type f -name "*.map" -delete || true
 
 # Stage 3: Runner
 FROM node:20-alpine AS runner
