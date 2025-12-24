@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["clsx", "tailwind-merge", "class-variance-authority"],
   },
+  output: "standalone",
 };
 
 export default nextConfig;
