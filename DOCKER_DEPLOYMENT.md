@@ -13,10 +13,12 @@ Dieses Dokument beschreibt, wie Sie dieses Next.js-Projekt mit Docker und GitHub
 Navigieren Sie zu Ihrem GitHub Repository → Settings → Secrets and variables → Actions:
 
 Fügen Sie folgende Secrets hinzu:
+
 - `DOCKER_USERNAME`: Ihr Docker Hub Benutzername
 - `DOCKER_PASSWORD`: Ihr Docker Hub Token/Password
 
 **Docker Hub Token erstellen:**
+
 1. Gehen Sie zu [Docker Hub](https://hub.docker.com/)
 2. Account Settings → Security → New Access Token
 3. Token kopieren und als `DOCKER_PASSWORD` Secret hinterlegen
@@ -24,10 +26,12 @@ Fügen Sie folgende Secrets hinzu:
 ## Automatisches Deployment via GitHub Actions
 
 Der Workflow in `.github/workflows/docker-publish.yml` wird automatisch ausgelöst bei:
+
 - **Push auf main Branch**: Baut und pushed das Docker Image
 - **Manueller Trigger**: Über GitHub Actions UI
 
 ### Image-Tagging-Strategie:
+
 - `latest`: Aktuellster Build vom main Branch
 - `main-<sha>`: Spezifischer Commit
 - `main`: Branch-spezifischer Tag
@@ -57,6 +61,7 @@ docker pull <DOCKER_USERNAME>/internal-feature-request-board:latest
 ```
 
 Beispiel:
+
 ```bash
 docker pull gcode/internal-feature-request-board:latest
 ```
@@ -72,6 +77,7 @@ docker run -d \
 ```
 
 **Optionen:**
+
 - `-d`: Container im Hintergrund laufen lassen
 - `--name`: Name für den Container
 - `-p 3000:3000`: Port-Mapping (Host:Container)
@@ -128,7 +134,7 @@ docker run -d \
 Erstellen Sie eine `docker-compose.yml`:
 
 ```yaml
-version: '3.8'
+version: "3.8"
 
 services:
   app:
@@ -140,16 +146,19 @@ services:
 ```
 
 **Starten:**
+
 ```bash
 docker-compose up -d
 ```
 
 **Stoppen:**
+
 ```bash
 docker-compose down
 ```
 
 **Update:**
+
 ```bash
 docker-compose pull
 docker-compose up -d
@@ -158,6 +167,7 @@ docker-compose up -d
 ## Produktions-Überlegungen
 
 ### Umgebungsvariablen
+
 Falls Sie Umgebungsvariablen benötigen:
 
 ```bash
@@ -171,6 +181,7 @@ docker run -d \
 ```
 
 Oder mit `.env` Datei:
+
 ```bash
 docker run -d \
   --name feature-request-board \
@@ -181,6 +192,7 @@ docker run -d \
 ```
 
 ### Volumes für persistente Daten
+
 Falls Sie Daten persistent speichern möchten:
 
 ```bash
@@ -193,9 +205,11 @@ docker run -d \
 ```
 
 ### Reverse Proxy (nginx/traefik)
+
 Für Produktionsumgebungen empfiehlt sich ein Reverse Proxy:
 
 **nginx Beispiel:**
+
 ```nginx
 server {
     listen 80;
@@ -215,20 +229,24 @@ server {
 ## Troubleshooting
 
 ### Container startet nicht:
+
 ```bash
 docker logs feature-request-board
 ```
 
 ### Port bereits belegt:
+
 ```bash
 # Anderen Port verwenden
 docker run -p 3001:3000 ...
 ```
 
 ### Image-Größe reduzieren:
+
 Das Dockerfile verwendet bereits Multi-Stage Builds für optimale Image-Größe.
 
 ### Build-Cache löschen:
+
 ```bash
 docker builder prune
 ```
@@ -236,11 +254,13 @@ docker builder prune
 ## Monitoring
 
 ### Container-Ressourcen überwachen:
+
 ```bash
 docker stats feature-request-board
 ```
 
 ### Detaillierte Container-Info:
+
 ```bash
 docker inspect feature-request-board
 ```
