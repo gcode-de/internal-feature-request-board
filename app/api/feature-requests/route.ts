@@ -7,11 +7,25 @@ import { Priority, Status } from "@/types/feature-request";
  * GET /api/feature-requests
  * Retrieve all feature requests (Discovery Context)
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const user = await getSessionUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    const requests = await FeatureRequestRepository.findAll();
+    const searchParams = request.nextUrl.searchParams;
+    const status = searchParams.get("status");
+    const priority = searchParams.get("priority");
+    const sort = searchParams.get("sort");
+    const requests = await FeatureRequestRepository.findAll({
+      search: searchParams.get("search")?.trim() || undefined,
+      status: Object.values(Status).includes(status as Status) ? (status as Status) : undefined,
+      priority: Object.values(Priority).includes(priority as Priority)
+        ? (priority as Priority)
+        : undefined,
+      sort:
+        sort && ["newest", "oldest", "updated", "title", "priority"].includes(sort)
+          ? (sort as "newest" | "oldest" | "updated" | "title" | "priority")
+          : "newest",
+    });
     return NextResponse.json(requests);
   } catch (error) {
     return NextResponse.json({ error: "Failed to retrieve feature requests" }, { status: 500 });

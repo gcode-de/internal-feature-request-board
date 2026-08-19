@@ -1,6 +1,6 @@
 import { Prisma, RequestPriority, RequestStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { FeatureRequest, Priority, Status } from "@/types/feature-request";
+import { FeatureRequest, Priority, RequestFilters, Status } from "@/types/feature-request";
 
 const requestInclude = {
   comments: {
@@ -8,6 +8,10 @@ const requestInclude = {
     orderBy: { createdAt: "asc" as const },
   },
   createdBy: { select: { id: true, name: true } },
+  auditLog: {
+    include: { actor: { select: { id: true, name: true } } },
+    orderBy: { createdAt: "desc" as const },
+  },
 };
 
 const statusToDb: Record<Status, RequestStatus> = {
@@ -33,6 +37,10 @@ function toDomain(
     ...request,
     status: request.status.toLowerCase() as Status,
     priority: request.priority.toLowerCase() as Priority,
+    auditLog: request.auditLog.map((entry) => ({
+      ...entry,
+      action: entry.action.toLowerCase() as "status_changed" | "priority_changed",
+    })),
   };
 }
 
@@ -45,10 +53,32 @@ export interface CreateFeatureRequest {
 }
 
 export class FeatureRequestRepository {
-  static async findAll(): Promise<FeatureRequest[]> {
+  static async findAll(filters: RequestFilters = {}): Promise<FeatureRequest[]> {
+    const where: Prisma.FeatureRequestWhereInput = {};
+    if (filters.search) {
+      where.OR = [
+        { title: { contains: filters.search, mode: "insensitive" } },
+        { description: { contains: filters.search, mode: "insensitive" } },
+      ];
+    }
+    if (filters.status) where.status = statusToDb[filters.status];
+    if (filters.priority) where.priority = priorityToDb[filters.priority];
+
+    const orderBy: Prisma.FeatureRequestOrderByWithRelationInput =
+      filters.sort === "oldest"
+        ? { createdAt: "asc" }
+        : filters.sort === "updated"
+          ? { updatedAt: "desc" }
+          : filters.sort === "title"
+            ? { title: "asc" }
+            : filters.sort === "priority"
+              ? { priority: "asc" }
+              : { createdAt: "desc" };
+
     const requests = await prisma.featureRequest.findMany({
+      where,
       include: requestInclude,
-      orderBy: { createdAt: "desc" },
+      orderBy,
     });
     return requests.map(toDomain);
   }
@@ -73,8 +103,15 @@ export class FeatureRequestRepository {
     return toDomain(request);
   }
 
-  static async update(id: string, updates: Partial<FeatureRequest>): Promise<FeatureRequest | null> {
-    const exists = await prisma.featureRequest.findUnique({ where: { id }, select: { id: true } });
+  static async update(
+    id: string,
+    updates: Partial<FeatureRequest>,
+    actorId?: string,
+  ): Promise<FeatureRequest | null> {
+    const exists = await prisma.featureRequest.findUnique({
+      where: { id },
+      select: { id: true, status: true, priority: true },
+    });
     if (!exists) return null;
 
     const data: Prisma.FeatureRequestUpdateInput = {};
@@ -82,6 +119,25 @@ export class FeatureRequestRepository {
     if (updates.description !== undefined) data.description = updates.description;
     if (updates.status !== undefined) data.status = statusToDb[updates.status];
     if (updates.priority !== undefined) data.priority = priorityToDb[updates.priority];
+
+    const auditEntries: Prisma.AuditLogCreateWithoutFeatureRequestInput[] = [];
+    if (actorId && updates.status && statusToDb[updates.status] !== exists.status) {
+      auditEntries.push({
+        action: "STATUS_CHANGED",
+        previousValue: exists.status.toLowerCase(),
+        nextValue: updates.status,
+        actor: { connect: { id: actorId } },
+      });
+    }
+    if (actorId && updates.priority && priorityToDb[updates.priority] !== exists.priority) {
+      auditEntries.push({
+        action: "PRIORITY_CHANGED",
+        previousValue: exists.priority.toLowerCase(),
+        nextValue: updates.priority,
+        actor: { connect: { id: actorId } },
+      });
+    }
+    if (auditEntries.length) data.auditLog = { create: auditEntries };
 
     const request = await prisma.featureRequest.update({
       where: { id },

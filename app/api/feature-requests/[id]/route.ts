@@ -64,7 +64,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const updated =
       typeof comment === "string" && comment.trim()
         ? await FeatureRequestRepository.addComment(id, comment.trim(), user.id)
-        : await FeatureRequestRepository.update(id, updates);
+        : await FeatureRequestRepository.update(id, updates, user.id);
 
     if (!updated) {
       return NextResponse.json({ error: "Feature request not found" }, { status: 404 });

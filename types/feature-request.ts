@@ -28,6 +28,25 @@ export interface FeatureRequest {
   createdAt: Date | string;
   updatedAt: Date | string;
   createdBy?: { id: string; name: string } | null;
+  auditLog: AuditEntry[];
+}
+
+export interface AuditEntry {
+  id: string;
+  action: "status_changed" | "priority_changed";
+  previousValue: string;
+  nextValue: string;
+  createdAt: Date | string;
+  actor: { id: string; name: string };
+}
+
+export type RequestSort = "newest" | "oldest" | "updated" | "title" | "priority";
+
+export interface RequestFilters {
+  search?: string;
+  status?: Status;
+  priority?: Priority;
+  sort?: RequestSort;
 }
 
 export const statusLabels: Record<Status, string> = {

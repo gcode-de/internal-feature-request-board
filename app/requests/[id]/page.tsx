@@ -5,7 +5,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { FeatureRequestForm } from "@/components/FeatureRequestForm";
-import { FeatureRequest, statusLabels, priorityLabels } from "@/types/feature-request";
+import {
+  FeatureRequest,
+  Priority,
+  priorityLabels,
+  Status,
+  statusLabels,
+} from "@/types/feature-request";
 import { SessionUser, UserRole } from "@/types/auth";
 
 interface DetailPageProps {
@@ -190,6 +196,44 @@ export default function FeatureRequestDetailPage({ params }: DetailPageProps) {
           )}
         </div>
       </div>
+
+      {(user?.role === UserRole.ProductOwner || user?.role === UserRole.Admin) && (
+        <div className="mb-6 rounded-lg border bg-card p-6">
+          <h2 className="mb-4 text-xl font-semibold">Decision history</h2>
+          {request.auditLog.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No status or priority changes yet.</p>
+          ) : (
+            <ol className="space-y-3">
+              {request.auditLog.map((entry) => (
+                <li key={entry.id} className="border-l-2 pl-3 text-sm">
+                  <p>
+                    <span className="font-medium">{entry.actor.name}</span> changed{" "}
+                    {entry.action === "status_changed" ? "status" : "priority"} from{" "}
+                    <span className="font-medium">
+                      {entry.action === "status_changed"
+                        ? statusLabels[entry.previousValue as Status]
+                        : priorityLabels[entry.previousValue as Priority]}
+                    </span>{" "}
+                    to{" "}
+                    <span className="font-medium">
+                      {entry.action === "status_changed"
+                        ? statusLabels[entry.nextValue as Status]
+                        : priorityLabels[entry.nextValue as Priority]}
+                    </span>
+                    .
+                  </p>
+                  <time
+                    className="text-xs text-muted-foreground"
+                    dateTime={new Date(entry.createdAt).toISOString()}
+                  >
+                    {new Date(entry.createdAt).toLocaleString()}
+                  </time>
+                </li>
+              ))}
+            </ol>
+          )}
+        </div>
+      )}
 
       {/* Comments Section */}
       <div className="bg-card border rounded-lg p-6">
