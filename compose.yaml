@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: featureboard
+      POSTGRES_USER: featureboard
+      POSTGRES_PASSWORD: featureboard
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U featureboard -d featureboard"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://featureboard:featureboard@db:5432/featureboard?schema=public
+      SESSION_COOKIE_SECURE: "false"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
