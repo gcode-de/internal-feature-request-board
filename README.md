@@ -1,52 +1,85 @@
 # Internal Feature Request Board
 
-A lightweight, domain-driven tool for teams to submit, discuss, and prioritize feature ideas. Built with Next.js (App Router), TypeScript, Tailwind CSS, and shadcn/ui.
+Ein internes Board zum Einreichen, Diskutieren und Priorisieren von Produktideen. Die Anwendung basiert auf Next.js (App Router), TypeScript, PostgreSQL, Prisma und Tailwind CSS.
 
-## Getting Started
+## Funktionsumfang
+
+- persistente Requests, Kommentare, Benutzer und Sessions in PostgreSQL
+- Login mit HttpOnly-Session-Cookie und gehashten Passwörtern
+- Rollen für Mitarbeitende, Product Owner und Admins
+- Audit Log für Status- und Prioritätswechsel
+- Suche in Titel und Beschreibung, Filter nach Status/Priorität und Sortierung
+- responsive Board-, Detail-, Dialog- und Login-Ansichten
+- Unit-Tests mit Vitest und Browser-Tests mit Playwright
+- lokaler Stack mit Docker Compose und CI über GitHub Actions
+
+## Rollen
+
+| Aktion                               | Mitarbeitende | Product Owner | Admin |
+| ------------------------------------ | :-----------: | :-----------: | :---: |
+| Requests lesen und einreichen        |       ✓       |       ✓       |   ✓   |
+| Kommentare schreiben                 |       ✓       |       ✓       |   ✓   |
+| Details, Status und Priorität ändern |       –       |       ✓       |   ✓   |
+| Audit Log in der Oberfläche sehen    |       –       |       ✓       |   ✓   |
+| Requests löschen                     |       –       |       –       |   ✓   |
+
+Die API prüft diese Rechte serverseitig; ausgeblendete UI-Aktionen sind nicht die Sicherheitsgrenze.
+
+## Lokale Entwicklung
+
+Voraussetzungen: Node.js 20+, npm und PostgreSQL 16+.
 
 ```bash
-npm install
-npm run dev        # Start dev server (http://localhost:3000)
-npm run lint       # TypeScript + ESLint
-npm run build      # Production build
+cp .env.example .env
+npm ci
+npm run db:generate
+npm run db:deploy
+npm run db:seed
+npm run dev
 ```
 
-## Architecture
+Die Anwendung ist anschließend unter [http://localhost:3000](http://localhost:3000) erreichbar.
 
-**Core Concepts**
+Der Seed legt drei Entwicklungskonten mit dem über `SEED_PASSWORD` konfigurierten Passwort an:
 
-- FeatureRequest: title, description, status, priority, comments
-- Status: Proposed → Under Review → Planned → In Progress → Shipped / Rejected
-- Priority: P0–P3
-- Comment: discussion thread attached to requests
+- `employee@example.com`
+- `owner@example.com`
+- `admin@example.com`
 
-**Bounded Contexts**
+Das Beispielpasswort darf nicht für produktive Konten verwendet werden.
 
-- Submission: create and validate requests (description optional)
-- Curation: edit status/priority via modal form
-- Discovery: list view with comment counter
-- Discussion: add comments to requests
+## Docker Compose
 
-## Key Decisions
+```bash
+docker compose up --build -d
+docker compose exec app node prisma/seed.mjs
+```
 
-✅ **In-Memory Database** - No Prisma/DB setup; data resets on /restart  
-✅ **No Authentication** - Single internal team, no user tracking  
-✅ **Description Optional** - Encourage quick submissions, refine later  
-✅ **Comments as Request Property** - No separate table; simple data model  
-✅ **Form Validation** - Real-time feedback with touched-state tracking
+Der App-Container wartet auf die Datenbank und spielt ausstehende Migrationen vor dem Serverstart ein. PostgreSQL-Daten liegen im benannten Volume `postgres-data`.
 
-## Not Implemented (Yet)
+```bash
+docker compose logs -f app
+docker compose down
+```
 
-- Voting / de-duplication
-- Search, sort & filters
-- Audit trail / decision history
-- User authentication & roles
-- Responsive mobile design
-- Database persistence
+Mit `docker compose down -v` wird zusätzlich die lokale Datenbank gelöscht.
 
-## Roadmap
+## Qualitätssicherung
 
-- [ ] Add database (Prisma + PostgreSQL)
-- [ ] Voting system
-- [ ] Advanced search/filters
-- [ ] User roles & audit trail
+```bash
+npm run typecheck
+npm test
+npm run test:e2e
+npm run build
+```
+
+Für den ersten lokalen Browser-Test ist einmalig `npx playwright install chromium` erforderlich. Der CI-Workflow startet PostgreSQL, migriert und seedet die Datenbank, führt Typecheck, Unit-Tests, Build und den Chromium-End-to-End-Test aus.
+
+## Datenmodell
+
+- `User` und `Session`: Identität, Rolle und serverseitig widerrufbare Session
+- `FeatureRequest`: Titel, Beschreibung, Workflow-Status, Priorität und Ersteller
+- `Comment`: Diskussion mit Autor und Zeitpunkt
+- `AuditLog`: unveränderlicher Akteur, Zeitpunkt sowie Alt-/Neuwert einer Status- oder Prioritätsänderung
+
+Schema und versionierte SQL-Migration liegen unter `prisma/`. Neue Migrationen werden lokal mit `npm run db:migrate` erzeugt und in Deployment/CI mit `npm run db:deploy` angewendet.
