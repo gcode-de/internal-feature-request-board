@@ -20,7 +20,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     return NextResponse.json(featureRequest);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to retrieve feature request" }, { status: 500 });
   }
 }
@@ -84,7 +84,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     return NextResponse.json(updated);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to update feature request" }, { status: 500 });
   }
 }
@@ -109,7 +109,7 @@ export async function DELETE(
     }
 
     return NextResponse.json({ message: "Feature request deleted successfully" });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to delete feature request" }, { status: 500 });
   }
 }

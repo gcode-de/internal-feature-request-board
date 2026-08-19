@@ -2,14 +2,7 @@
 
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {
-  FeatureRequest,
-  Status,
-  Priority,
-  statusLabels,
-  priorityLabels,
-} from "@/types/feature-request";
+import { FeatureRequest, Status, statusLabels, priorityLabels } from "@/types/feature-request";
 
 interface FeatureRequestListProps {
   requests: FeatureRequest[];

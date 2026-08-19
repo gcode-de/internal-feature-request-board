@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -53,9 +53,8 @@ export function FeatureRequestForm({
 
   const isFormValid = Object.keys(validationErrors).length === 0;
 
-  // Reset form when opening in submit mode
-  useEffect(() => {
-    if (isOpen && !isEditMode) {
+  const handleClose = () => {
+    if (!isEditMode) {
       setTitle("");
       setDescription("");
       setStatus(Status.Proposed);
@@ -63,7 +62,8 @@ export function FeatureRequestForm({
       setApiError(null);
       setTouched({ title: false, description: false });
     }
-  }, [isOpen, isEditMode]);
+    onClose();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,7 +107,7 @@ export function FeatureRequestForm({
       }
 
       onSuccess();
-      onClose();
+      handleClose();
     } catch (err) {
       setApiError(err instanceof Error ? err.message : "An error occurred");
     } finally {
@@ -131,7 +131,7 @@ export function FeatureRequestForm({
         throw new Error(data.error || "Failed to delete request");
       }
 
-      onClose();
+      handleClose();
       onDelete?.();
     } catch (err) {
       setApiError(err instanceof Error ? err.message : "An error occurred");
@@ -141,7 +141,7 @@ export function FeatureRequestForm({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
@@ -264,7 +264,12 @@ export function FeatureRequestForm({
                 )}
               </div>
               <div className="flex flex-col-reverse gap-2 sm:flex-row">
-                <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleClose}
+                  disabled={isSubmitting}
+                >
                   Cancel
                 </Button>
                 <Button

@@ -53,6 +53,8 @@ export default function HomePage() {
   }, [priority, router, search, sort, status]);
 
   useEffect(() => {
+    // Fetching remote state on dependency changes is the intended synchronization here.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchRequests();
   }, [fetchRequests]);
 

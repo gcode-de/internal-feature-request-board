@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
           : "newest",
     });
     return NextResponse.json(requests);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to retrieve feature requests" }, { status: 500 });
   }
 }
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(newRequest, { status: 201 });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to create feature request" }, { status: 500 });
   }
 }
