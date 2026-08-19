@@ -7,5 +7,6 @@ export interface Comment {
   id: string;
   featureRequestId: string;
   content: string;
-  createdAt: Date;
+  createdAt: Date | string;
+  author?: { id: string; name: string } | null;
 }

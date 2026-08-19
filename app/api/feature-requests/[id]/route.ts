@@ -47,17 +47,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       updates.priority = priority as Priority;
     }
 
-    if (typeof comment === "string" && comment.trim()) {
-      const newComment = {
-        id: `comment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        featureRequestId: id,
-        content: comment,
-        createdAt: new Date(),
-      };
-      updates.comments = [...existing.comments, newComment];
-    }
-
-    const updated = await FeatureRequestRepository.update(id, updates);
+    const updated =
+      typeof comment === "string" && comment.trim()
+        ? await FeatureRequestRepository.addComment(id, comment.trim())
+        : await FeatureRequestRepository.update(id, updates);
 
     if (!updated) {
       return NextResponse.json({ error: "Feature request not found" }, { status: 404 });

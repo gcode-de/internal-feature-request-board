@@ -1,126 +1,109 @@
-import { FeatureRequest, Status, Priority } from "@/types/feature-request";
+import { Prisma, RequestPriority, RequestStatus } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
+import { FeatureRequest, Priority, Status } from "@/types/feature-request";
 
-// In-Memory store (mock database)
-let featureRequests: Map<string, FeatureRequest> = new Map([
-  [
-    "req-001",
-    {
-      id: "req-001",
-      title: "Advanced search with filters",
-      description:
-        "Enable users to filter requests by status, priority, and tags for better discovery.",
-      status: Status.Planned,
-      priority: Priority.P1,
-      comments: [],
-    },
-  ],
-  [
-    "req-002",
-    {
-      id: "req-002",
-      title: "Email notifications for status changes",
-      description: "Notify submitters when their request status changes to keep them informed.",
-      status: Status.UnderReview,
-      priority: Priority.P2,
-      comments: [],
-    },
-  ],
-  [
-    "req-003",
-    {
-      id: "req-003",
-      title: "Duplicate detection on submission",
-      description:
-        "Suggest similar existing requests when users submit new ideas to reduce duplicates.",
-      status: Status.Proposed,
-      priority: Priority.P2,
-      comments: [],
-    },
-  ],
-  [
-    "req-004",
-    {
-      id: "req-004",
-      title: "Public roadmap view",
-      description: "Display planned and in-progress features on a public-facing roadmap page.",
-      status: Status.InProgress,
-      priority: Priority.P0,
-      comments: [],
-    },
-  ],
-  [
-    "req-005",
-    {
-      id: "req-005",
-      title: "Dark mode toggle",
-      description: "Allow users to switch between light and dark themes for better accessibility.",
-      status: Status.Shipped,
-      priority: Priority.P3,
-      comments: [],
-    },
-  ],
-]);
+const requestInclude = {
+  comments: {
+    include: { author: { select: { id: true, name: true } } },
+    orderBy: { createdAt: "asc" as const },
+  },
+  createdBy: { select: { id: true, name: true } },
+};
 
-// Domain Repository: Submission Context
+const statusToDb: Record<Status, RequestStatus> = {
+  [Status.Proposed]: RequestStatus.PROPOSED,
+  [Status.UnderReview]: RequestStatus.UNDER_REVIEW,
+  [Status.Planned]: RequestStatus.PLANNED,
+  [Status.InProgress]: RequestStatus.IN_PROGRESS,
+  [Status.Shipped]: RequestStatus.SHIPPED,
+  [Status.Rejected]: RequestStatus.REJECTED,
+};
+
+const priorityToDb: Record<Priority, RequestPriority> = {
+  [Priority.P0]: RequestPriority.P0,
+  [Priority.P1]: RequestPriority.P1,
+  [Priority.P2]: RequestPriority.P2,
+  [Priority.P3]: RequestPriority.P3,
+};
+
+function toDomain(
+  request: Prisma.FeatureRequestGetPayload<{ include: typeof requestInclude }>,
+): FeatureRequest {
+  return {
+    ...request,
+    status: request.status.toLowerCase() as Status,
+    priority: request.priority.toLowerCase() as Priority,
+  };
+}
+
+export interface CreateFeatureRequest {
+  title: string;
+  description: string;
+  status: Status;
+  priority: Priority;
+  createdById?: string;
+}
+
 export class FeatureRequestRepository {
-  /**
-   * Retrieve all feature requests
-   */
   static async findAll(): Promise<FeatureRequest[]> {
-    return Array.from(featureRequests.values());
+    const requests = await prisma.featureRequest.findMany({
+      include: requestInclude,
+      orderBy: { createdAt: "desc" },
+    });
+    return requests.map(toDomain);
   }
 
-  /**
-   * Retrieve a single feature request by ID
-   */
   static async findById(id: string): Promise<FeatureRequest | null> {
-    return featureRequests.get(id) || null;
+    const request = await prisma.featureRequest.findUnique({
+      where: { id },
+      include: requestInclude,
+    });
+    return request ? toDomain(request) : null;
   }
 
-  /**
-   * Submit a new feature request
-   */
-  static async create(request: Omit<FeatureRequest, "id" | "comments">): Promise<FeatureRequest> {
-    const id = `req-${Date.now()}`;
-    const newRequest: FeatureRequest = {
-      ...request,
-      id,
-      comments: [],
-    };
-    featureRequests.set(id, newRequest);
-    return newRequest;
+  static async create(input: CreateFeatureRequest): Promise<FeatureRequest> {
+    const request = await prisma.featureRequest.create({
+      data: {
+        ...input,
+        status: statusToDb[input.status],
+        priority: priorityToDb[input.priority],
+      },
+      include: requestInclude,
+    });
+    return toDomain(request);
   }
 
-  /**
-   * Update an existing feature request (Curation Context)
-   */
-  static async update(
+  static async update(id: string, updates: Partial<FeatureRequest>): Promise<FeatureRequest | null> {
+    const exists = await prisma.featureRequest.findUnique({ where: { id }, select: { id: true } });
+    if (!exists) return null;
+
+    const data: Prisma.FeatureRequestUpdateInput = {};
+    if (updates.title !== undefined) data.title = updates.title;
+    if (updates.description !== undefined) data.description = updates.description;
+    if (updates.status !== undefined) data.status = statusToDb[updates.status];
+    if (updates.priority !== undefined) data.priority = priorityToDb[updates.priority];
+
+    const request = await prisma.featureRequest.update({
+      where: { id },
+      data,
+      include: requestInclude,
+    });
+    return toDomain(request);
+  }
+
+  static async addComment(
     id: string,
-    updates: Partial<FeatureRequest>,
+    content: string,
+    authorId?: string,
   ): Promise<FeatureRequest | null> {
-    const existing = featureRequests.get(id);
-    if (!existing) return null;
-
-    const updated: FeatureRequest = {
-      ...existing,
-      ...updates,
-      id: existing.id, // Prevent ID tampering
-    };
-    featureRequests.set(id, updated);
-    return updated;
+    const exists = await prisma.featureRequest.findUnique({ where: { id }, select: { id: true } });
+    if (!exists) return null;
+    await prisma.comment.create({ data: { content, featureRequestId: id, authorId } });
+    return this.findById(id);
   }
 
-  /**
-   * Delete a feature request
-   */
   static async delete(id: string): Promise<boolean> {
-    return featureRequests.delete(id);
-  }
-
-  /**
-   * Clear all data (useful for testing)
-   */
-  static async reset(): Promise<void> {
-    featureRequests.clear();
+    const result = await prisma.featureRequest.deleteMany({ where: { id } });
+    return result.count > 0;
   }
 }

@@ -1,0 +1,105 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  EMPLOYEE
+  PRODUCT_OWNER
+  ADMIN
+}
+
+enum RequestStatus {
+  PROPOSED
+  UNDER_REVIEW
+  PLANNED
+  IN_PROGRESS
+  SHIPPED
+  REJECTED
+}
+
+enum RequestPriority {
+  P0
+  P1
+  P2
+  P3
+}
+
+enum AuditAction {
+  STATUS_CHANGED
+  PRIORITY_CHANGED
+}
+
+model User {
+  id           String           @id @default(cuid())
+  email        String           @unique
+  name         String
+  passwordHash String
+  role         Role             @default(EMPLOYEE)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  requests     FeatureRequest[]
+  comments     Comment[]
+  sessions     Session[]
+  auditEntries AuditLog[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model FeatureRequest {
+  id          String          @id @default(cuid())
+  title       String
+  description String          @default("")
+  status      RequestStatus   @default(PROPOSED)
+  priority    RequestPriority @default(P2)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  createdById String?
+  createdBy   User?           @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  comments    Comment[]
+  auditLog    AuditLog[]
+
+  @@index([status])
+  @@index([priority])
+  @@index([createdAt])
+}
+
+model Comment {
+  id               String         @id @default(cuid())
+  content          String
+  createdAt        DateTime       @default(now())
+  featureRequestId String
+  featureRequest   FeatureRequest @relation(fields: [featureRequestId], references: [id], onDelete: Cascade)
+  authorId         String?
+  author           User?          @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([featureRequestId, createdAt])
+}
+
+model AuditLog {
+  id               String         @id @default(cuid())
+  action           AuditAction
+  previousValue    String
+  nextValue        String
+  createdAt        DateTime       @default(now())
+  featureRequestId String
+  featureRequest   FeatureRequest @relation(fields: [featureRequestId], references: [id], onDelete: Cascade)
+  actorId          String
+  actor            User           @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([featureRequestId, createdAt])
+}

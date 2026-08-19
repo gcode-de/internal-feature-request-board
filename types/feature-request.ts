@@ -25,6 +25,9 @@ export interface FeatureRequest {
   status: Status;
   priority: Priority;
   comments: Comment[];
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  createdBy?: { id: string; name: string } | null;
 }
 
 export const statusLabels: Record<Status, string> = {
