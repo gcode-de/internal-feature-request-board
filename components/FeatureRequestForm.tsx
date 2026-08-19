@@ -11,6 +11,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { FeatureRequest, Status, Priority } from "@/types/feature-request";
+import {
+  DESCRIPTION_MAX,
+  TITLE_MAX,
+  validateFeatureRequest,
+} from "@/lib/validation/feature-request";
 
 interface FeatureRequestFormProps {
   request?: FeatureRequest | null;
@@ -19,38 +24,6 @@ interface FeatureRequestFormProps {
   onSuccess: () => void;
   onDelete?: () => void;
   canDelete?: boolean;
-}
-
-// Validation constraints
-const TITLE_MIN = 3;
-const TITLE_MAX = 100;
-const DESCRIPTION_MIN = 10;
-const DESCRIPTION_MAX = 1000;
-
-// Field validation errors
-interface ValidationErrors {
-  title?: string;
-  description?: string;
-}
-
-function validateForm(title: string, description: string): ValidationErrors {
-  const errors: ValidationErrors = {};
-
-  if (!title.trim()) {
-    errors.title = "Title is required";
-  } else if (title.trim().length < TITLE_MIN) {
-    errors.title = `Title must be at least ${TITLE_MIN} characters`;
-  } else if (title.length > TITLE_MAX) {
-    errors.title = `Title must not exceed ${TITLE_MAX} characters`;
-  }
-
-  if (description.trim() && description.trim().length < DESCRIPTION_MIN) {
-    errors.description = `Description must be at least ${DESCRIPTION_MIN} characters`;
-  } else if (description.length > DESCRIPTION_MAX) {
-    errors.description = `Description must not exceed ${DESCRIPTION_MAX} characters`;
-  }
-
-  return errors;
 }
 
 export function FeatureRequestForm({
@@ -73,7 +46,10 @@ export function FeatureRequestForm({
   const [touched, setTouched] = useState({ title: false, description: false });
 
   // Validation
-  const validationErrors = useMemo(() => validateForm(title, description), [title, description]);
+  const validationErrors = useMemo(
+    () => validateFeatureRequest(title, description),
+    [title, description],
+  );
 
   const isFormValid = Object.keys(validationErrors).length === 0;
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { FeatureRequestRepository } from "@/lib/repositories/feature-request.repository";
 import { Status, Priority } from "@/types/feature-request";
 import { canCurate, getSessionUser, isAdmin } from "@/lib/auth/session";
+import { validateFeatureRequest } from "@/lib/validation/feature-request";
 
 /**
  * GET /api/feature-requests/[id]
@@ -49,11 +50,23 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     if (changesRequest && !canCurate(user)) {
       return NextResponse.json({ error: "Product Owner role required" }, { status: 403 });
     }
+    if (changesRequest) {
+      const errors = validateFeatureRequest(
+        typeof title === "string" ? title.trim() : existing.title,
+        typeof description === "string" ? description.trim() : existing.description,
+      );
+      if (Object.keys(errors).length) {
+        return NextResponse.json(
+          { error: "Invalid feature request", fields: errors },
+          { status: 400 },
+        );
+      }
+    }
 
     const updates: Partial<typeof existing> = {};
 
-    if (typeof title === "string") updates.title = title;
-    if (typeof description === "string") updates.description = description;
+    if (typeof title === "string") updates.title = title.trim();
+    if (typeof description === "string") updates.description = description.trim();
     if (typeof status === "string" && Object.values(Status).includes(status as Status)) {
       updates.status = status as Status;
     }

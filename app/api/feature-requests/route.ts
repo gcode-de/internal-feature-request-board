@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { FeatureRequestRepository } from "@/lib/repositories/feature-request.repository";
 import { getSessionUser } from "@/lib/auth/session";
 import { Priority, Status } from "@/types/feature-request";
+import { validateFeatureRequest } from "@/lib/validation/feature-request";
 
 /**
  * GET /api/feature-requests
@@ -42,14 +43,19 @@ export async function POST(request: NextRequest) {
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const body = await request.json();
 
-    // Basic validation
-    if (!body.title) {
-      return NextResponse.json({ error: "Missing required field: title" }, { status: 400 });
+    const title = typeof body.title === "string" ? body.title.trim() : "";
+    const description = typeof body.description === "string" ? body.description.trim() : "";
+    const errors = validateFeatureRequest(title, description);
+    if (Object.keys(errors).length) {
+      return NextResponse.json(
+        { error: "Invalid feature request", fields: errors },
+        { status: 400 },
+      );
     }
 
     const newRequest = await FeatureRequestRepository.create({
-      title: body.title,
-      description: body.description || "",
+      title,
+      description,
       status: Status.Proposed,
       priority: Priority.P2,
       createdById: user.id,
