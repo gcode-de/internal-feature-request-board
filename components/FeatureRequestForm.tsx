@@ -18,6 +18,7 @@ interface FeatureRequestFormProps {
   onClose: () => void;
   onSuccess: () => void;
   onDelete?: () => void;
+  canDelete?: boolean;
 }
 
 // Validation constraints
@@ -58,6 +59,7 @@ export function FeatureRequestForm({
   onClose,
   onSuccess,
   onDelete,
+  canDelete = false,
 }: FeatureRequestFormProps) {
   const isEditMode = !!request;
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -225,43 +227,45 @@ export function FeatureRequestForm({
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="status" className="block text-sm font-medium mb-1">
-                Status
-              </label>
-              <select
-                id="status"
-                value={status}
-                onChange={(e) => setStatus(e.target.value as Status)}
-                className="w-full px-3 py-2 border rounded-md bg-background"
-              >
-                <option value={Status.Proposed}>Proposed</option>
-                <option value={Status.UnderReview}>Under Review</option>
-                <option value={Status.Planned}>Planned</option>
-                <option value={Status.InProgress}>In Progress</option>
-                <option value={Status.Shipped}>Shipped</option>
-                <option value={Status.Rejected}>Rejected</option>
-              </select>
-            </div>
+          {isEditMode && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="status" className="block text-sm font-medium mb-1">
+                  Status
+                </label>
+                <select
+                  id="status"
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value as Status)}
+                  className="w-full px-3 py-2 border rounded-md bg-background"
+                >
+                  <option value={Status.Proposed}>Proposed</option>
+                  <option value={Status.UnderReview}>Under Review</option>
+                  <option value={Status.Planned}>Planned</option>
+                  <option value={Status.InProgress}>In Progress</option>
+                  <option value={Status.Shipped}>Shipped</option>
+                  <option value={Status.Rejected}>Rejected</option>
+                </select>
+              </div>
 
-            <div>
-              <label htmlFor="priority" className="block text-sm font-medium mb-1">
-                Priority
-              </label>
-              <select
-                id="priority"
-                value={priority}
-                onChange={(e) => setPriority(e.target.value as Priority)}
-                className="w-full px-3 py-2 border rounded-md bg-background"
-              >
-                <option value={Priority.P0}>P0 - Critical</option>
-                <option value={Priority.P1}>P1 - High</option>
-                <option value={Priority.P2}>P2 - Medium</option>
-                <option value={Priority.P3}>P3 - Low</option>
-              </select>
+              <div>
+                <label htmlFor="priority" className="block text-sm font-medium mb-1">
+                  Priority
+                </label>
+                <select
+                  id="priority"
+                  value={priority}
+                  onChange={(e) => setPriority(e.target.value as Priority)}
+                  className="w-full px-3 py-2 border rounded-md bg-background"
+                >
+                  <option value={Priority.P0}>P0 - Critical</option>
+                  <option value={Priority.P1}>P1 - High</option>
+                  <option value={Priority.P2}>P2 - Medium</option>
+                  <option value={Priority.P3}>P3 - Low</option>
+                </select>
+              </div>
             </div>
-          </div>
+          )}
 
           {apiError && (
             <div className="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-md p-3">
@@ -272,7 +276,7 @@ export function FeatureRequestForm({
           <DialogFooter>
             <div className="flex items-center justify-between w-full">
               <div>
-                {isEditMode && (
+                {isEditMode && canDelete && (
                   <Button
                     type="button"
                     variant="destructive"

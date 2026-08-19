@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { FeatureRequestRepository } from "@/lib/repositories/feature-request.repository";
+import { getSessionUser } from "@/lib/auth/session";
+import { Priority, Status } from "@/types/feature-request";
 
 /**
  * GET /api/feature-requests
@@ -7,6 +9,8 @@ import { FeatureRequestRepository } from "@/lib/repositories/feature-request.rep
  */
 export async function GET() {
   try {
+    const user = await getSessionUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const requests = await FeatureRequestRepository.findAll();
     return NextResponse.json(requests);
   } catch (error) {
@@ -20,21 +24,21 @@ export async function GET() {
  */
 export async function POST(request: NextRequest) {
   try {
+    const user = await getSessionUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const body = await request.json();
 
     // Basic validation
-    if (!body.title || !body.status || !body.priority) {
-      return NextResponse.json(
-        { error: "Missing required fields: title, status, priority" },
-        { status: 400 },
-      );
+    if (!body.title) {
+      return NextResponse.json({ error: "Missing required field: title" }, { status: 400 });
     }
 
     const newRequest = await FeatureRequestRepository.create({
       title: body.title,
       description: body.description || "",
-      status: body.status,
-      priority: body.priority,
+      status: Status.Proposed,
+      priority: Priority.P2,
+      createdById: user.id,
     });
 
     return NextResponse.json(newRequest, { status: 201 });

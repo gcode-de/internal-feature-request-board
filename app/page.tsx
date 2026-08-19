@@ -1,23 +1,30 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FeatureRequestList } from "@/components/FeatureRequestList";
 import { FeatureRequestForm } from "@/components/FeatureRequestForm";
 import { Button } from "@/components/ui/button";
 import { FeatureRequest } from "@/types/feature-request";
+import { UserMenu } from "@/components/UserMenu";
+import { useRouter } from "next/navigation";
 
 export default function HomePage() {
+  const router = useRouter();
   const [requests, setRequests] = useState<FeatureRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<FeatureRequest | null>(null);
 
-  const fetchRequests = async () => {
+  const fetchRequests = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
       const response = await fetch("/api/feature-requests");
+      if (response.status === 401) {
+        router.push("/login");
+        return;
+      }
       if (!response.ok) {
         throw new Error("Failed to fetch feature requests");
       }
@@ -28,11 +35,11 @@ export default function HomePage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [router]);
 
   useEffect(() => {
     fetchRequests();
-  }, []);
+  }, [fetchRequests]);
 
   const handleOpenForm = () => {
     setIsFormOpen(true);
@@ -48,14 +55,17 @@ export default function HomePage() {
 
   return (
     <main className="mx-auto max-w-4xl p-6">
-      <div className="mb-6 flex items-start justify-between">
+      <div className="mb-6 flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold mb-1">Internal Feature Request Board</h1>
           <p className="text-sm text-muted-foreground">Submitted ideas and their current status</p>
         </div>
-        <Button onClick={() => handleOpenForm()} size="sm">
-          Submit Request
-        </Button>
+        <div className="flex items-center gap-2">
+          <UserMenu />
+          <Button onClick={() => handleOpenForm()} size="sm">
+            Submit Request
+          </Button>
+        </div>
       </div>
 
       <FeatureRequestList requests={requests} isLoading={isLoading} error={error} />

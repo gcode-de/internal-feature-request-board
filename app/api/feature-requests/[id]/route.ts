@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { FeatureRequestRepository } from "@/lib/repositories/feature-request.repository";
 import { Status, Priority } from "@/types/feature-request";
+import { canCurate, getSessionUser, isAdmin } from "@/lib/auth/session";
 
 /**
  * GET /api/feature-requests/[id]
@@ -8,6 +9,8 @@ import { Status, Priority } from "@/types/feature-request";
  */
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const user = await getSessionUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const { id } = await params;
     const featureRequest = await FeatureRequestRepository.findById(id);
 
@@ -27,6 +30,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
  */
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const user = await getSessionUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const { id } = await params;
     const body = await request.json();
     const existing = await FeatureRequestRepository.findById(id);
@@ -35,6 +40,15 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const { title, description, status, priority, comment } = body;
+
+    const changesRequest =
+      typeof title === "string" ||
+      typeof description === "string" ||
+      typeof status === "string" ||
+      typeof priority === "string";
+    if (changesRequest && !canCurate(user)) {
+      return NextResponse.json({ error: "Product Owner role required" }, { status: 403 });
+    }
 
     const updates: Partial<typeof existing> = {};
 
@@ -49,7 +63,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     const updated =
       typeof comment === "string" && comment.trim()
-        ? await FeatureRequestRepository.addComment(id, comment.trim())
+        ? await FeatureRequestRepository.addComment(id, comment.trim(), user.id)
         : await FeatureRequestRepository.update(id, updates);
 
     if (!updated) {
@@ -71,6 +85,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const user = await getSessionUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!isAdmin(user)) return NextResponse.json({ error: "Admin role required" }, { status: 403 });
     const { id } = await params;
     const deleted = await FeatureRequestRepository.delete(id);
 

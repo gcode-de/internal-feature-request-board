@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { FeatureRequestForm } from "@/components/FeatureRequestForm";
 import { FeatureRequest, statusLabels, priorityLabels } from "@/types/feature-request";
+import { SessionUser, UserRole } from "@/types/auth";
 
 interface DetailPageProps {
   params: Promise<{ id: string }>;
@@ -20,6 +21,13 @@ export default function FeatureRequestDetailPage({ params }: DetailPageProps) {
   const [id, setId] = useState<string | null>(null);
   const [newComment, setNewComment] = useState("");
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [user, setUser] = useState<SessionUser | null>(null);
+
+  useEffect(() => {
+    fetch("/api/auth/session")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((body) => setUser(body?.user ?? null));
+  }, []);
 
   useEffect(() => {
     const loadParams = async () => {
@@ -38,6 +46,11 @@ export default function FeatureRequestDetailPage({ params }: DetailPageProps) {
         setError(null);
         const response = await fetch(`/api/feature-requests/${id}`);
 
+        if (response.status === 401) {
+          router.push("/login");
+          return;
+        }
+
         if (!response.ok) {
           if (response.status === 404) {
             throw new Error("Feature request not found");
@@ -55,7 +68,7 @@ export default function FeatureRequestDetailPage({ params }: DetailPageProps) {
     };
 
     fetchRequest();
-  }, [id]);
+  }, [id, router]);
 
   const handleFormSuccess = () => {
     setIsFormOpen(false);
@@ -165,14 +178,16 @@ export default function FeatureRequestDetailPage({ params }: DetailPageProps) {
             </div>
           </div>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsFormOpen(true)}
-            className="flex-shrink-0"
-          >
-            edit
-          </Button>
+          {(user?.role === UserRole.ProductOwner || user?.role === UserRole.Admin) && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsFormOpen(true)}
+              className="flex-shrink-0"
+            >
+              Edit
+            </Button>
+          )}
         </div>
       </div>
 
@@ -224,6 +239,7 @@ export default function FeatureRequestDetailPage({ params }: DetailPageProps) {
         onClose={() => setIsFormOpen(false)}
         onSuccess={handleFormSuccess}
         onDelete={handleFormDelete}
+        canDelete={user?.role === UserRole.Admin}
       />
     </main>
   );
