@@ -116,7 +116,7 @@ export default function FeatureRequestDetailPage({ params }: DetailPageProps) {
 
   if (isLoading) {
     return (
-      <main className="mx-auto max-w-4xl p-6">
+      <main className="mx-auto max-w-4xl p-4 sm:p-6">
         <div className="text-center py-12">
           <p className="text-muted-foreground">Loading feature request...</p>
         </div>
@@ -126,7 +126,7 @@ export default function FeatureRequestDetailPage({ params }: DetailPageProps) {
 
   if (error || !request) {
     return (
-      <main className="mx-auto max-w-4xl p-6">
+      <main className="mx-auto max-w-4xl p-4 sm:p-6">
         <Link href="/">
           <Button variant="outline" className="mb-6">
             ← Back to Board
@@ -142,18 +142,18 @@ export default function FeatureRequestDetailPage({ params }: DetailPageProps) {
   }
 
   return (
-    <main className="mx-auto max-w-4xl p-6">
+    <main className="mx-auto max-w-4xl p-4 sm:p-6">
       <Link href="/">
         <Button variant="outline" className="mb-6">
           ← Back to Board
         </Button>
       </Link>
 
-      <div className="bg-card border rounded-lg p-6 mb-6">
-        <div className="flex items-start justify-between gap-4 mb-4">
+      <div className="mb-6 rounded-lg border bg-card p-4 sm:p-6">
+        <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex-1">
-            <h1 className="text-3xl font-bold mb-2">{request.title}</h1>
-            <p className="text-muted-foreground mb-4">{request.description}</p>
+            <h1 className="mb-2 break-words text-2xl font-bold sm:text-3xl">{request.title}</h1>
+            <p className="mb-4 break-words text-muted-foreground">{request.description}</p>
 
             <div className="flex flex-wrap gap-3">
               <div>
@@ -189,7 +189,7 @@ export default function FeatureRequestDetailPage({ params }: DetailPageProps) {
               variant="outline"
               size="sm"
               onClick={() => setIsFormOpen(true)}
-              className="flex-shrink-0"
+              className="w-full flex-shrink-0 sm:w-auto"
             >
               Edit
             </Button>
@@ -198,7 +198,7 @@ export default function FeatureRequestDetailPage({ params }: DetailPageProps) {
       </div>
 
       {(user?.role === UserRole.ProductOwner || user?.role === UserRole.Admin) && (
-        <div className="mb-6 rounded-lg border bg-card p-6">
+        <div className="mb-6 rounded-lg border bg-card p-4 sm:p-6">
           <h2 className="mb-4 text-xl font-semibold">Decision history</h2>
           {request.auditLog.length === 0 ? (
             <p className="text-sm text-muted-foreground">No status or priority changes yet.</p>
@@ -236,7 +236,7 @@ export default function FeatureRequestDetailPage({ params }: DetailPageProps) {
       )}
 
       {/* Comments Section */}
-      <div className="bg-card border rounded-lg p-6">
+      <div className="rounded-lg border bg-card p-4 sm:p-6">
         <h2 className="text-xl font-semibold mb-4">Discussion ({request.comments.length})</h2>
 
         {/* Comments List */}
@@ -248,8 +248,8 @@ export default function FeatureRequestDetailPage({ params }: DetailPageProps) {
           ) : (
             request.comments.map((comment) => (
               <div key={comment.id} className="border rounded-md p-3 bg-background">
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <p className="text-sm flex-1">{comment.content}</p>
+                <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <p className="flex-1 break-words text-sm">{comment.content}</p>
                   <span className="text-xs text-muted-foreground flex-shrink-0">
                     {new Date(comment.createdAt).toLocaleDateString()}
                   </span>

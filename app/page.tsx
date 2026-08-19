@@ -21,7 +21,6 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState<FeatureRequest | null>(null);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<Status | "">("");
   const [priority, setPriority] = useState<Priority | "">("");
@@ -70,13 +69,13 @@ export default function HomePage() {
   };
 
   return (
-    <main className="mx-auto max-w-4xl p-6">
-      <div className="mb-6 flex items-start justify-between gap-4">
+    <main className="mx-auto max-w-5xl p-4 sm:p-6">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold mb-1">Internal Feature Request Board</h1>
           <p className="text-sm text-muted-foreground">Submitted ideas and their current status</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between gap-2 sm:justify-end">
           <UserMenu />
           <Button onClick={() => handleOpenForm()} size="sm">
             Submit Request
@@ -165,7 +164,7 @@ export default function HomePage() {
       <FeatureRequestList requests={requests} isLoading={isLoading} error={error} />
 
       <FeatureRequestForm
-        request={selectedRequest}
+        request={null}
         isOpen={isFormOpen}
         onClose={handleCloseForm}
         onSuccess={handleFormSuccess}

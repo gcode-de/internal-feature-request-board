@@ -48,9 +48,11 @@ export function FeatureRequestList({ requests, isLoading, error }: FeatureReques
         <div key={request.id} className="group relative">
           <Link href={`/requests/${request.id}`}>
             <Card className="hover:shadow-md transition-shadow cursor-pointer">
-              <CardHeader className="pb-2 pt-4">
-                <div className="flex items-start justify-between gap-4">
-                  <CardTitle className="text-lg font-semibold">{request.title}</CardTitle>
+              <CardHeader className="px-4 pb-2 pt-4 sm:px-6">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                  <CardTitle className="break-words text-lg font-semibold leading-snug">
+                    {request.title}
+                  </CardTitle>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <span className="text-xs font-medium text-muted-foreground">
                       {priorityLabels[request.priority]}
@@ -58,9 +60,11 @@ export function FeatureRequestList({ requests, isLoading, error }: FeatureReques
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="pb-4 pt-0">
-                <p className="text-sm text-muted-foreground mb-2">{request.description}</p>
-                <div className="flex items-center gap-2">
+              <CardContent className="px-4 pb-4 pt-0 sm:px-6">
+                <p className="mb-3 line-clamp-3 break-words text-sm text-muted-foreground">
+                  {request.description}
+                </p>
+                <div className="flex flex-wrap items-center gap-2">
                   <span
                     className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
                       request.status === Status.Shipped

@@ -228,7 +228,7 @@ export function FeatureRequestForm({
           </div>
 
           {isEditMode && (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label htmlFor="status" className="block text-sm font-medium mb-1">
                   Status
@@ -274,7 +274,7 @@ export function FeatureRequestForm({
           )}
 
           <DialogFooter>
-            <div className="flex items-center justify-between w-full">
+            <div className="flex w-full flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 {isEditMode && canDelete && (
                   <Button
@@ -287,11 +287,15 @@ export function FeatureRequestForm({
                   </Button>
                 )}
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-col-reverse gap-2 sm:flex-row">
                 <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isSubmitting || !isFormValid}>
+                <Button
+                  type="submit"
+                  className="w-full sm:w-auto"
+                  disabled={isSubmitting || !isFormValid}
+                >
                   {isSubmitting ? "Saving..." : isEditMode ? "Update Request" : "Submit Request"}
                 </Button>
               </div>
